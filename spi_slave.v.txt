@@ -1,0 +1,28 @@
+ module spi_slave (
+    input sclk,
+    input ss,
+    input mosi,
+    output reg miso,
+    input [7:0] data_in,
+    output reg [7:0] data_out
+);
+
+reg [7:0] shift_reg;
+reg [2:0] bit_cnt;
+
+always @(posedge sclk or posedge ss) begin
+    if (ss) begin
+        bit_cnt <= 0;
+        shift_reg <= data_in;
+    end else begin
+        shift_reg <= {shift_reg[6:0], mosi};
+        miso <= shift_reg[7];
+        bit_cnt <= bit_cnt + 1;
+
+        if (bit_cnt == 7) begin
+            data_out <= shift_reg;
+        end
+    end
+end
+
+endmodule

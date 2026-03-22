@@ -1,0 +1,47 @@
+module spi_master (
+    input clk,
+    input rst,
+    input start,
+    input [7:0] data_in,
+    output reg [7:0] data_out,
+    output reg sclk,
+    output reg mosi,
+    input miso,
+    output reg ss,
+    output reg done
+);
+
+reg [2:0] bit_cnt;
+reg [7:0] shift_reg;
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        sclk <= 0;
+        ss <= 1;
+        done <= 0;
+        bit_cnt <= 0;
+    end else begin
+        if (start) begin
+            ss <= 0;
+            shift_reg <= data_in;
+            bit_cnt <= 0;
+            done <= 0;
+        end else if (!ss) begin
+            sclk <= ~sclk;
+
+            if (sclk == 0) begin
+                mosi <= shift_reg[7];
+                shift_reg <= {shift_reg[6:0], miso};
+                bit_cnt <= bit_cnt + 1;
+
+                if (bit_cnt == 7) begin
+                    ss <= 1;
+                    data_out <= shift_reg;
+                    done <= 1;
+                end
+            end
+        end
+    end
+end
+
+endmodule

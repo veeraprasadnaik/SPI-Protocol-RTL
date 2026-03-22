@@ -1,0 +1,63 @@
+`timescale 1ns/1ps
+
+module spi_tb;
+
+reg clk = 0;
+reg rst = 0;
+reg start = 0;
+reg [7:0] data_in;
+wire [7:0] data_out;
+
+wire sclk, mosi, miso, ss, done;
+
+// Slave signals
+reg [7:0] slave_data_in = 8'hA5;
+wire [7:0] slave_data_out;
+
+// Clock generation
+always #5 clk = ~clk;
+
+// Instantiate Master
+spi_master master (
+    .clk(clk),
+    .rst(rst),
+    .start(start),
+    .data_in(data_in),
+    .data_out(data_out),
+    .sclk(sclk),
+    .mosi(mosi),
+    .miso(miso),
+    .ss(ss),
+    .done(done)
+);
+
+// Instantiate Slave
+spi_slave slave (
+    .sclk(sclk),
+    .ss(ss),
+    .mosi(mosi),
+    .miso(miso),
+    .data_in(slave_data_in),
+    .data_out(slave_data_out)
+);
+
+initial begin
+    // Reset
+    rst = 1;
+    #10;
+    rst = 0;
+
+    // Send data
+    data_in = 8'h3C;
+    start = 1;
+    #10;
+    start = 0;
+
+    // Wait for completion
+    wait(done);
+
+    #20;
+    $stop;
+end
+
+endmodule
